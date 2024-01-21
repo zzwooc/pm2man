@@ -567,7 +567,7 @@
             <a-tag v-else>关闭</a-tag>
           </template>
           <template v-else-if="column.key === 'file'">
-            {{ record.name !== 'pm2man' && record.name !== 'pm2srv' ? record.file : '' }}
+            {{ record.namespace !== 'system' ? record.file : '' }}
           </template>
           <template v-else-if="column.key === 'args'">
             <a-flex gap="small" vertical align="center" justify="center">
@@ -578,7 +578,7 @@
           </template>
           <template v-else-if="column.key === 'action'">
             <a-space
-              v-if="record.name !== 'pm2man' && record.name !== 'pm2srv'"
+              v-if="record.namespace !== 'system'"
             >
               <a-button
                 type="primary"

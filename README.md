@@ -17,7 +17,7 @@ npm run build
 3. Run
 
 ```bash
-pm2 serve dist --spa --port 8080 --name pm2man
+pm2 serve dist --spa --port 8080 --name pm2man --namespace system
 ```
 
 #### PM2SRV
