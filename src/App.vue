@@ -9,7 +9,7 @@
     PlayCircleOutlined,
     PauseCircleOutlined,
     DeleteOutlined,
-    AppstoreOutlined,
+    SaveOutlined,
   } from '@ant-design/icons-vue'
   import { Modal, message, theme } from 'ant-design-vue'
   import Fatch from './fatch'
@@ -376,6 +376,15 @@
     formState.value.args = ''
     uploadFiles.value = []
   }
+
+  // 保存开机自启
+  const saving = ref(false)
+  const save = async () => {
+    saving.value = true
+    await Fatch.post('/pm2/save')
+    message.success('保存成功')
+    saving.value = false
+  }
 </script>
 
 <template>
@@ -425,7 +434,13 @@
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
             </svg>
           </a-button>
-          <a-typography-title :level="3" strong mark class="my-3 select-none cursor-default">PM2MAN</a-typography-title>
+          <a-typography-title
+            :level="3"
+            strong
+            mark
+            class="my-3 select-none cursor-default"
+            >PM2MAN</a-typography-title
+          >
         </a-flex>
         <a-flex gap="middle" align="center" justify="center" class="p-4">
           <a-button
@@ -449,7 +464,7 @@
             :icon="h(PlayCircleOutlined)"
             @click="confirmStartAll"
             :loading="starting"
-            :disabled="starting || stopping || deleting"
+            :disabled="starting || stopping || deleting || saving"
           >
             启动所有应用
           </a-button>
@@ -459,7 +474,7 @@
             :icon="h(PauseCircleOutlined)"
             @click="confirmStopAll"
             :loading="stopping"
-            :disabled="starting || stopping || deleting"
+            :disabled="starting || stopping || deleting || saving"
           >
             停止所有应用
           </a-button>
@@ -469,9 +484,18 @@
             :icon="h(DeleteOutlined)"
             @click="confirmDeleteAll"
             :loading="deleting"
-            :disabled="starting || stopping || deleting"
+            :disabled="starting || stopping || deleting || saving"
           >
             删除所有应用
+          </a-button>
+          <a-button
+            type="primary"
+            :icon="h(SaveOutlined)"
+            :loading="saving"
+            :disabled="starting || stopping || deleting || saving"
+            @click="save"
+          >
+            保存开机自启
           </a-button>
         </a-flex>
       </a-flex>
