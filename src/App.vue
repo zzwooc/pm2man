@@ -244,6 +244,10 @@
     showed.value = true
     showData.value = await Fatch.get(`/pm2/show/${name}`)
   }
+  const closeShow = () => {
+    showed.value = false
+    showData.value = {}
+  }
 
   // 查看某一个应用的日志
   const logsShow = ref(false)
@@ -252,6 +256,10 @@
   const logs = async (name) => {
     logsShow.value = true
     logsData.value = await Fatch.get(`/pm2/logs/${name}?lines=${lines.value}`)
+  }
+  const closeLogs = () => {
+    logsShow.value = false
+    logsData.value = {}
   }
 
   // 启动
@@ -657,10 +665,7 @@
       :footer="null"
       width="800px"
       wrap-class-name="full-modal"
-      @cancel="
-        showed = false
-        showData = {}
-      "
+      @cancel="closeLogs"
     >
       <a-flex justify="center" class="mt-1">
         <a-typography-text class="whitespace-pre-wrap font-mono">
@@ -673,10 +678,7 @@
       :footer="null"
       width="800px"
       wrap-class-name="full-modal"
-      @cancel="
-        logsShow = false
-        logsData = {}
-      "
+      @cancel="closeShow"
     >
       <a-flex align="center" class="mt-1">
         <a-typography-text strong class="mr-2">行数：</a-typography-text>
