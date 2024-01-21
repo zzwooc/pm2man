@@ -189,7 +189,7 @@
   const stopping = ref(false)
   const stopAll = async () => {
     stopping.value = true
-    await Fatch.post('/pm2/stop/all')
+    await Fatch.post('/pm2/stop/custom')
     data.value = await Fatch.get('/pm2/jlist')
     message.success('所有应用停止成功')
     stopping.value = false
@@ -209,7 +209,7 @@
   const deleting = ref(false)
   const deleteAll = async () => {
     deleting.value = true
-    await Fatch.delete('/pm2/delete/all')
+    await Fatch.delete('/pm2/delete/custom')
     data.value = await Fatch.get('/pm2/jlist')
     message.success('所有应用删除成功')
     deleting.value = false
@@ -576,9 +576,9 @@
               </a-tag>
             </a-flex>
           </template>
-          <template v-else-if="column.key !== 'action'">
+          <template v-else-if="column.key === 'action'">
             <a-space
-              v-if="record.namespace === 'default'"
+              v-if="record.namespace !== 'default'"
             >
               <a-button
                 type="primary"
