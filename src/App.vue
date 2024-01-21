@@ -1,11 +1,7 @@
 <script setup>
   import { onMounted, ref } from 'vue'
   import { formatTimeAgo } from '@vueuse/core'
-  import {
-    ReloadOutlined,
-    UploadOutlined,
-    ExclamationCircleOutlined,
-  } from '@ant-design/icons-vue'
+  import { ReloadOutlined, UploadOutlined } from '@ant-design/icons-vue'
   import { Modal, message, theme } from 'ant-design-vue'
   import Fatch from './fatch'
 
@@ -249,6 +245,15 @@
     showData.value = await Fatch.get(`/pm2/show/${name}`)
   }
 
+  // 查看某一个应用的日志
+  const logsShow = ref(false)
+  const logsData = ref({})
+  const lines = ref(100)
+  const logs = async (name) => {
+    logsShow.value = true
+    logsData.value = await Fatch.get(`/pm2/logs/${name}?lines=${lines.value}`)
+  }
+
   // 启动
   const start = async (name) => {
     data.value.forEach((item, index) => {
@@ -338,7 +343,8 @@
 
   // 上传
   const uploadFiles = ref([])
-  const uploadApi = ref(`${import.meta.env.VITE_API_BASE_URL}/pm2/upload`)
+  const apiUrl = ref(`${import.meta.env.VITE_API_BASE_URL}`)
+  const uploadApi = ref(`${apiUrl}/pm2/upload`)
   const uploadChange = ({ file }) => {
     formState.value.filename = file.name
   }
@@ -369,7 +375,6 @@
     creating.value = false
     reset()
   }
-
   const reset = () => {
     opened.value = false
     formState.value.filename = null
@@ -472,10 +477,15 @@
         </template>
 
         <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'id'">
+            <a-button type="link" @click="logs(record.name)">
+              {{ record.id }}
+            </a-button>
+          </template>
           <template v-if="column.key === 'name'">
-            <a-button type="link" @click="show(record.name)">{{
-              record.name
-            }}</a-button>
+            <a-button type="link" @click="show(record.name)">
+              {{ record.name }}
+            </a-button>
           </template>
           <template v-else-if="column.key === 'mode'">
             <a-tag color="blue" v-if="record.mode === 'fork_mode'">
@@ -647,10 +657,41 @@
       :footer="null"
       width="800px"
       wrap-class-name="full-modal"
+      @cancel="
+        showed = false
+        showData = {}
+      "
     >
       <a-flex justify="center" class="mt-1">
         <a-typography-text class="whitespace-pre-wrap font-mono">
           {{ showData }}
+        </a-typography-text>
+      </a-flex>
+    </a-modal>
+    <a-modal
+      v-model:open="logsShow"
+      :footer="null"
+      width="800px"
+      wrap-class-name="full-modal"
+      @cancel="
+        logsShow = false
+        logsData = {}
+      "
+    >
+      <a-flex align="center" class="mt-1">
+        <a-typography-text strong class="mr-2">行数：</a-typography-text>
+        <a-input-number
+          v-model:value="lines"
+          :min="1"
+          :max="1000"
+          class="w-20"
+          @change="logs(record.name)"
+        />
+      </a-flex>
+      <a-divider />
+      <a-flex justify="center" class="mt-4">
+        <a-typography-text class="whitespace-pre-wrap font-mono">
+          {{ logsData }}
         </a-typography-text>
       </a-flex>
     </a-modal>
