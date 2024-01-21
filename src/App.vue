@@ -1,7 +1,16 @@
 <script setup>
-  import { onMounted, ref } from 'vue'
+  import { onMounted, ref, h } from 'vue'
   import { formatTimeAgo } from '@vueuse/core'
-  import { ReloadOutlined, UploadOutlined } from '@ant-design/icons-vue'
+  import {
+    ReloadOutlined,
+    UploadOutlined,
+    ExceptionOutlined,
+    PlusOutlined,
+    PlayCircleOutlined,
+    PauseCircleOutlined,
+    DeleteOutlined,
+    AppstoreOutlined,
+  } from '@ant-design/icons-vue'
   import { Modal, message, theme } from 'ant-design-vue'
   import Fatch from './fatch'
 
@@ -36,15 +45,6 @@
       sortDirections: ['ascend', 'descend'],
       sorter: {
         compare: (a, b) => a.name.localeCompare(b.name),
-      },
-    },
-    {
-      title: 'Namespace',
-      key: 'namespace',
-      dataIndex: 'namespace',
-      sortDirections: ['ascend', 'descend'],
-      sorter: {
-        compare: (a, b) => a.namespace.localeCompare(b.namespace),
       },
     },
     {
@@ -129,18 +129,6 @@
       title: 'Watching',
       key: 'watch',
       dataIndex: 'watch',
-      filters: [
-        {
-          text: '启用',
-          value: true,
-        },
-        {
-          text: '关闭',
-          value: false,
-        },
-      ],
-      filterMultiple: true,
-      onFilter: (value, record) => record.watch.indexOf(value) === 0,
       sortDirections: ['ascend', 'descend'],
       sorter: {
         compare: (a, b) => a.watch.localeCompare(b.watch),
@@ -241,25 +229,21 @@
   const showed = ref(false)
   const showData = ref({})
   const show = async (name) => {
+    showData.value = {}
     showed.value = true
     showData.value = await Fatch.get(`/pm2/show/${name}`)
-  }
-  const closeShow = () => {
-    showed.value = false
-    showData.value = {}
   }
 
   // 查看某一个应用的日志
   const logsShow = ref(false)
   const logsData = ref({})
+  const logsName = ref('')
   const lines = ref(100)
   const logs = async (name) => {
-    logsShow.value = true
-    logsData.value = await Fatch.get(`/pm2/logs/${name}?lines=${lines.value}`)
-  }
-  const closeLogs = () => {
-    logsShow.value = false
     logsData.value = {}
+    logsShow.value = true
+    logsName.value = name
+    logsData.value = await Fatch.get(`/pm2/logs/${name}?lines=${lines.value}`)
   }
 
   // 启动
@@ -276,7 +260,7 @@
 
     data.value.forEach((item, index) => {
       if (item.name === name) {
-        data.value[index].starting = stop
+        data.value[index].starting = false
       }
     })
   }
@@ -401,9 +385,8 @@
     }"
   >
     <a-layout class="px-4 min-h-screen">
-      <a-flex gap="middle" align="center" justify="space-between">
-        <a-typography-title :level="3" class="p-4">PM2MAN</a-typography-title>
-        <a-flex gap="middle" class="p-4">
+      <a-flex gap="middle" align="center" justify="space-between" class="py-2">
+        <a-flex align="center" justify="center">
           <a-button type="link" @click="changeTheme">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -442,12 +425,28 @@
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
             </svg>
           </a-button>
-          <a-button type="primary" @click="opened = true" :disabled="opened">
+          <a-typography-title :level="3" strong mark class="my-3 select-none cursor-default">PM2MAN</a-typography-title>
+        </a-flex>
+        <a-flex gap="middle" align="center" justify="center" class="p-4">
+          <a-button
+            type="link"
+            :icon="h(ExceptionOutlined)"
+            @click="logs('all')"
+          >
+            查看所有日志
+          </a-button>
+          <a-button
+            type="primary"
+            :icon="h(PlusOutlined)"
+            @click="opened = true"
+            :disabled="opened"
+          >
             新建应用并启动
           </a-button>
           <a-button
             type="primary"
             ghost
+            :icon="h(PlayCircleOutlined)"
             @click="confirmStartAll"
             :loading="starting"
             :disabled="starting || stopping || deleting"
@@ -457,6 +456,7 @@
           <a-button
             ghost
             danger
+            :icon="h(PauseCircleOutlined)"
             @click="confirmStopAll"
             :loading="stopping"
             :disabled="starting || stopping || deleting"
@@ -466,6 +466,7 @@
           <a-button
             type="primary"
             danger
+            :icon="h(DeleteOutlined)"
             @click="confirmDeleteAll"
             :loading="deleting"
             :disabled="starting || stopping || deleting"
@@ -499,9 +500,18 @@
             <a-tag color="blue" v-if="record.mode === 'fork_mode'">
               单例
             </a-tag>
-            <a-tag color="orange" v-if="record.mode === 'cluster_mode'">
-              集群（{{ record.instances }}）
-            </a-tag>
+            <a-flex
+              gap="small"
+              vertical
+              align="center"
+              justify="center"
+              v-if="record.mode === 'cluster_mode'"
+            >
+              <a-tag color="orange"> 集群 </a-tag>
+              <a-typography-text type="secondary">
+                {{ record.instances }} 个实例
+              </a-typography-text>
+            </a-flex>
           </template>
           <template v-else-if="column.key === 'uptime'">
             {{ formatTimeAgo(record.uptime) }}
@@ -533,11 +543,11 @@
             <a-tag v-else>关闭</a-tag>
           </template>
           <template v-else-if="column.key === 'args'">
-            <a-space class="flex flex-col">
+            <a-flex gap="small" vertical align="center" justify="center">
               <a-tag v-for="(item, index) in record.args" :key="index">
                 {{ item }}
               </a-tag>
-            </a-space>
+            </a-flex>
           </template>
           <template v-else-if="column.key === 'action'">
             <a-space
@@ -546,6 +556,7 @@
               <a-button
                 type="primary"
                 ghost
+                :icon="h(PlayCircleOutlined)"
                 @click="confirmStart(record.name)"
                 :loading="starting || record.starting"
                 :disabled="
@@ -563,6 +574,7 @@
               <a-button
                 ghost
                 danger
+                :icon="h(PauseCircleOutlined)"
                 @click="confirmStop(record.name)"
                 :loading="stopping || record.stopping"
                 :disabled="
@@ -580,6 +592,7 @@
               <a-button
                 type="primary"
                 danger
+                :icon="h(DeleteOutlined)"
                 @click="confirmDelet(record.name)"
                 :loading="deleting || record.deleting"
                 :disabled="
@@ -665,7 +678,6 @@
       :footer="null"
       width="800px"
       wrap-class-name="full-modal"
-      @cancel="closeLogs"
     >
       <a-flex justify="center" class="mt-1">
         <a-typography-text class="whitespace-pre-wrap font-mono">
@@ -678,17 +690,16 @@
       :footer="null"
       width="800px"
       wrap-class-name="full-modal"
-      @cancel="closeShow"
     >
-      <a-flex align="center" class="mt-1">
-        <a-typography-text strong class="mr-2">行数：</a-typography-text>
+      <a-flex gap="small" align="center" class="mt-1">
+        <a-typography-text strong>行数：</a-typography-text>
         <a-input-number
           v-model:value="lines"
           :min="1"
           :max="1000"
           class="w-20"
-          @change="logs(record.name)"
         />
+        <a-button @click="logs(logsName)" :icon="h(ReloadOutlined)"></a-button>
       </a-flex>
       <a-divider />
       <a-flex justify="center" class="mt-4">
