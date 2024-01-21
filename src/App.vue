@@ -566,6 +566,9 @@
             <a-tag color="green" v-if="record.watch">开启</a-tag>
             <a-tag v-else>关闭</a-tag>
           </template>
+          <template v-else-if="column.key === 'file'">
+            {{ record.name !== 'pm2man' || 'pm2srv' ? record.file : '' }}
+          </template>
           <template v-else-if="column.key === 'args'">
             <a-flex gap="small" vertical align="center" justify="center">
               <a-tag v-for="(item, index) in record.args" :key="index">
