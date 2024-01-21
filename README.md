@@ -18,6 +18,7 @@ npm run build
 
 ```bash
 pm2 serve dist --spa --port 8080 --name pm2man
+```
 
 #### PM2SRV
 
@@ -25,4 +26,4 @@ pm2 serve dist --spa --port 8080 --name pm2man
 
 #### Screenshot
 
-![](./screenshot.png)
+![screenshot.png](./screenshot.png)
