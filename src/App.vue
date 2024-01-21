@@ -169,7 +169,7 @@
   const starting = ref(false)
   const startAll = async () => {
     starting.value = true
-    await Fatch.post('/pm2/start/all')
+    await Fatch.post('/pm2/start/custom')
     data.value = await Fatch.get('/pm2/jlist')
     message.success('所有应用启动成功')
     starting.value = false
