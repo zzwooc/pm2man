@@ -567,7 +567,7 @@
             <a-tag v-else>关闭</a-tag>
           </template>
           <template v-else-if="column.key === 'file'">
-            {{ record.namespace !== 'system' ? record.file : '' }}
+            {{ record.namespace !== 'default' ? record.file : '' }}
           </template>
           <template v-else-if="column.key === 'args'">
             <a-flex gap="small" vertical align="center" justify="center">
@@ -578,7 +578,7 @@
           </template>
           <template v-else-if="column.key === 'action'">
             <a-space
-              v-if="record.namespace !== 'system'"
+              v-if="record.namespace !== 'default'"
             >
               <a-button
                 type="primary"
