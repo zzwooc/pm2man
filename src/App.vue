@@ -464,7 +464,7 @@
             :icon="h(PlayCircleOutlined)"
             @click="confirmStartAll"
             :loading="starting"
-            :disabled="starting || stopping || deleting || saving"
+            :disabled="starting || stopping || deleting || saving || data.length === 0"
           >
             启动所有应用
           </a-button>
@@ -474,7 +474,7 @@
             :icon="h(PauseCircleOutlined)"
             @click="confirmStopAll"
             :loading="stopping"
-            :disabled="starting || stopping || deleting || saving"
+            :disabled="starting || stopping || deleting || saving || data.length === 0"
           >
             停止所有应用
           </a-button>
@@ -484,7 +484,7 @@
             :icon="h(DeleteOutlined)"
             @click="confirmDeleteAll"
             :loading="deleting"
-            :disabled="starting || stopping || deleting || saving"
+            :disabled="starting || stopping || deleting || saving || data.length === 0"
           >
             删除所有应用
           </a-button>
