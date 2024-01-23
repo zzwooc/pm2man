@@ -48,6 +48,15 @@
       },
     },
     {
+      title: '分组',
+      key: 'namespace',
+      dataIndex: 'namespace',
+      sortDirections: ['ascend', 'descend'],
+      sorter: {
+        compare: (a, b) => a.name.localeCompare(b.name),
+      },
+    },
+    {
       title: '运行模式',
       key: 'mode',
       dataIndex: 'mode',
