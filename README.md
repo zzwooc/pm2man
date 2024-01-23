@@ -16,8 +16,16 @@ npm run build
 
 3. Run
 
-```bash
-pm2 serve dist --spa --port 8080 --name pm2man --namespace system
+```nginx
+server {
+    listen 80;
+    server_name localhost;
+    root /var/www/html;
+    index index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
 ```
 
 #### PM2SRV

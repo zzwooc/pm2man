@@ -162,15 +162,15 @@
       currentTheme.value = theme.defaultAlgorithm
     }
     // 初始化表哥数据
-    data.value = await Fatch.get('/pm2/jlist')
+    data.value = await Fatch.get('list')
   })
 
   // 启动所有应用
   const starting = ref(false)
   const startAll = async () => {
     starting.value = true
-    await Fatch.post('/pm2/start/custom')
-    data.value = await Fatch.get('/pm2/jlist')
+    await Fatch.post('start/all')
+    data.value = await Fatch.get('list')
     message.success('所有应用启动成功')
     starting.value = false
   }
@@ -189,8 +189,8 @@
   const stopping = ref(false)
   const stopAll = async () => {
     stopping.value = true
-    await Fatch.post('/pm2/stop/custom')
-    data.value = await Fatch.get('/pm2/jlist')
+    await Fatch.post('stop/all')
+    data.value = await Fatch.get('list')
     message.success('所有应用停止成功')
     stopping.value = false
   }
@@ -209,8 +209,8 @@
   const deleting = ref(false)
   const deleteAll = async () => {
     deleting.value = true
-    await Fatch.delete('/pm2/delete/custom')
-    data.value = await Fatch.get('/pm2/jlist')
+    await Fatch.delete('del/all')
+    data.value = await Fatch.get('list')
     message.success('所有应用删除成功')
     deleting.value = false
   }
@@ -231,7 +231,7 @@
   const show = async (name) => {
     showData.value = {}
     showed.value = true
-    showData.value = await Fatch.get(`/pm2/show/${name}`)
+    showData.value = await Fatch.get(`show/${name}`)
   }
 
   // 查看某一个应用的日志
@@ -243,7 +243,7 @@
     logsData.value = {}
     logsShow.value = true
     logsName.value = name
-    logsData.value = await Fatch.get(`/pm2/logs/${name}?lines=${lines.value}`)
+    logsData.value = await Fatch.get(`logs/${name}?lines=${lines.value}`)
   }
 
   // 启动
@@ -254,8 +254,8 @@
       }
     })
 
-    await Fatch.post(`/pm2/start/${name}`)
-    data.value = await Fatch.get('/pm2/jlist')
+    await Fatch.post(`start/${name}`)
+    data.value = await Fatch.get('list')
     message.success('启动成功')
 
     data.value.forEach((item, index) => {
@@ -283,8 +283,8 @@
       }
     })
 
-    await Fatch.post(`/pm2/stop/${name}`)
-    data.value = await Fatch.get('/pm2/jlist')
+    await Fatch.post(`stop/${name}`)
+    data.value = await Fatch.get('list')
     message.success('停止成功')
 
     data.value.forEach((item, index) => {
@@ -312,8 +312,8 @@
       }
     })
 
-    await Fatch.delete(`/pm2/delete/${name}`)
-    data.value = await Fatch.get('/pm2/jlist')
+    await Fatch.delete(`del/${name}`)
+    data.value = await Fatch.get('list')
     message.success('删除成功')
 
     data.value.forEach((item, index) => {
@@ -333,57 +333,44 @@
     })
   }
 
-  // 上传
-  const uploadFiles = ref([])
-  const apiUrl = ref(`${import.meta.env.VITE_API_BASE_URL}`)
-  const uploadApi = ref(`${apiUrl}/pm2/upload`)
-  const uploadChange = ({ file }) => {
-    formState.value.filename = file.name
-  }
-
-  const opened = ref(false)
-  const formState = ref({
-    filename: null,
-    name: '',
-    cluster: false,
-    instances: 1,
-    args: '',
-  })
-  const theForm = ref(null)
-  const creating = ref(false)
-  const create = async () => {
-    if (!formState.value.filename) {
-      message.error('请上传脚本文件！')
-      return
-    }
-    if (!formState.value.name) {
-      message.error('请填写运行名称！')
-      return
-    }
-    creating.value = true
-    await Fatch.post('/pm2/start', formState.value)
-    data.value = await Fatch.get('/pm2/jlist')
-    message.success('新建成功')
-    creating.value = false
-    reset()
-  }
-  const reset = () => {
-    opened.value = false
-    formState.value.filename = null
-    formState.value.name = ''
-    formState.value.cluster = false
-    formState.value.instances = 1
-    formState.value.args = ''
-    uploadFiles.value = []
-  }
-
   // 保存开机自启
   const saving = ref(false)
   const save = async () => {
     saving.value = true
-    await Fatch.post('/pm2/save')
-    message.success('保存成功')
+    await Fatch.post('save')
+    message.success('保存开机自启成功')
     saving.value = false
+  }
+
+  // 上传
+  const opened = ref(false)
+  const fileList = ref([])
+
+  const beforeUpload = () => {
+    return false
+  }
+
+  const handleRemove = () => {
+    fileList.value = []
+  }
+
+  const uploading = ref(false)
+  const handleUpload = async () => {
+    const formData = new FormData()
+    formData.append('file', fileList.value[0].originFileObj)
+
+    uploading.value = true
+    await Fatch.request('create', {
+      method: 'POST',
+      body: formData,
+    })
+    uploading.value = false
+
+    opened.value = false
+    fileList.value = []
+    message.success('创建成功')
+
+    data.value = await Fatch.get('list')
   }
 </script>
 
@@ -464,7 +451,9 @@
             :icon="h(PlayCircleOutlined)"
             @click="confirmStartAll"
             :loading="starting"
-            :disabled="starting || stopping || deleting || saving || data.length === 0"
+            :disabled="
+              starting || stopping || deleting || saving || data.length === 0
+            "
           >
             启动所有应用
           </a-button>
@@ -474,7 +463,9 @@
             :icon="h(PauseCircleOutlined)"
             @click="confirmStopAll"
             :loading="stopping"
-            :disabled="starting || stopping || deleting || saving || data.length === 0"
+            :disabled="
+              starting || stopping || deleting || saving || data.length === 0
+            "
           >
             停止所有应用
           </a-button>
@@ -484,7 +475,9 @@
             :icon="h(DeleteOutlined)"
             @click="confirmDeleteAll"
             :loading="deleting"
-            :disabled="starting || stopping || deleting || saving || data.length === 0"
+            :disabled="
+              starting || stopping || deleting || saving || data.length === 0
+            "
           >
             删除所有应用
           </a-button>
@@ -577,9 +570,7 @@
             </a-flex>
           </template>
           <template v-else-if="column.key === 'action'">
-            <a-space
-              v-if="record.namespace !== 'default'"
-            >
+            <a-space>
               <a-button
                 type="primary"
                 ghost
@@ -630,6 +621,7 @@
                   record.stopping ||
                   record.deleting
                 "
+                v-if="record.status !== 'online'"
               >
                 删除
               </a-button>
@@ -638,72 +630,47 @@
         </template>
       </a-table>
     </a-layout>
-    <a-modal v-model:open="opened" :footer="null" title="新建应用">
-      <a-form
-        ref="theForm"
-        :model="formState"
-        :label-col="{
-          style: {
-            width: '80px',
-          },
-        }"
-        class="mt-10"
+    <a-modal v-model:open="opened" :footer="null">
+      <a-upload-dragger
+        name="file"
+        :maxCount="1"
+        v-model:file-list="fileList"
+        :before-upload="beforeUpload"
+        @remove="handleRemove"
+        class="mt-8"
       >
-        <a-form-item
-          label="上传脚本"
-          :rules="[
-            { required: true, message: '请上传脚本文件！', trigger: 'change' },
-          ]"
+        <UploadOutlined class="text-8xl text-gray-500" />
+        <a-flex
+          gap="small"
+          vertical
+          align="center"
+          justify="center"
+          class="px-4"
         >
-          <a-upload
-            v-model:file-list="uploadFiles"
-            name="file"
-            :maxCount="1"
-            :action="uploadApi"
-            @change="uploadChange"
-          >
-            <a-button>
-              <UploadOutlined></UploadOutlined>
-              上传脚本文件
-            </a-button>
-          </a-upload>
-        </a-form-item>
-        <a-form-item
-          label="运行名称"
-          :rules="[
-            { required: true, message: '请填写运行名称！', trigger: 'change' },
-          ]"
+          <a-typography-title :level="4" type="secondary" strong>
+            点击活拖拽文件上传
+          </a-typography-title>
+          <a-typography-text type="secondary">
+            请将脚本目录整个打包成 zip 上传，请确保目录里有 pm2.config.js
+            并正确配置
+          </a-typography-text>
+        </a-flex>
+      </a-upload-dragger>
+      <a-flex align="center" justify="center">
+        <a-button
+          size="large"
+          type="primary"
+          class="w-full my-4"
+          @click="handleUpload"
         >
-          <a-input v-model:value="formState.name" />
-        </a-form-item>
-        <a-form-item label="集群模式">
-          <a-switch v-model:checked="formState.cluster" />
-        </a-form-item>
-        <a-form-item label="负载数量" v-if="formState.cluster">
-          <a-input-number
-            v-model:value="formState.instances"
-            :min="1"
-            :max="4"
-          />
-        </a-form-item>
-        <a-form-item label="脚本参数">
-          <a-input v-model:value="formState.args" />
-        </a-form-item>
-        <a-form-item :wrapper-col="{ span: 14, offset: 4 }">
-          <a-button
-            type="primary"
-            @click="create"
-            :disabled="!formState.filename || !formState.name"
-            >新建</a-button
-          >
-          <a-button class="ml-2" @click="reset">取消</a-button>
-        </a-form-item>
-      </a-form>
+          上传并启动
+        </a-button>
+      </a-flex>
     </a-modal>
     <a-modal
       v-model:open="showed"
       :footer="null"
-      width="800px"
+      width="100%"
       wrap-class-name="full-modal"
     >
       <a-flex justify="center" class="mt-1">
@@ -715,7 +682,7 @@
     <a-modal
       v-model:open="logsShow"
       :footer="null"
-      width="800px"
+      width="100%"
       wrap-class-name="full-modal"
     >
       <a-flex gap="small" align="center" class="mt-1">
